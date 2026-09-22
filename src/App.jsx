@@ -30,20 +30,31 @@ function App() {
     });
 
     videoRef.current.srcObject = videoData;
-
+    
     const track = videoData.getVideoTracks()[0];
     imageCaptureRef.current = new ImageCapture(track);
-
-    console.log(track);
-
+    
     setCameraReady(true);
   }
 
-  function clickPhoto(){
-    const result = imageCaptureRef.current.takePhoto(); // blob
+  async function clickPhoto(){
+    const blob = await imageCaptureRef.current.takePhoto();
+    const buffer = await blob.arrayBuffer();
+    await window.electronAPI.savePhoto(buffer);
     // Convert ArrayBuffer - bytes 
     // Save 
   }
+
+  useEffect(() => {
+    if(!started) return;
+    const id = setInterval(() => {
+      clickPhoto();
+    },5000)
+
+    return () => {
+      clearInterval(id)
+    }
+  },[started])
 
   async function getFullscreen() {
     await window.electronAPI.setFullScreen();
@@ -51,6 +62,7 @@ function App() {
 
   async function startTest() {
     await window.electronAPI.showExamRules();
+    setStarted(true);
   }
   // await window.electronAPI.startTest();
   // setStarted(true);
